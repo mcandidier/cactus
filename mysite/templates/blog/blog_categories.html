@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% load wagtailcore_tags  %}
+
+{% block body_class %}template-blogcategories{% endblock %}
+
+{% block content %}
+    {% for category in categories %}
+    <div>
+       {{ category.name }}
+        {% for blog in category.blogs %}
+            {{ blog }}
+        {% endfor %}
+    </div>
+    {% endfor %}
+{% endblock %}

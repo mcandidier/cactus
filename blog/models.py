@@ -35,8 +35,13 @@ class BlogCategory(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def blogs(self):
+        return self.blogpage_set.live()
     
     class Meta: 
+        verbose_name = 'blog category'
         verbose_name_plural = 'blog categories'
 
 
@@ -76,7 +81,6 @@ class BlogIndexPage(RoutablePageMixin, Page):
                 msg = 'There are no blog posts tagged with "{}"'.format(tag)
                 messages.add_message(request, messages.INFO, msg)
             return redirect(self.url)
-
         blogpages = self.get_posts(tag=tag)
         context = {
             'tag': tag,
@@ -87,17 +91,13 @@ class BlogIndexPage(RoutablePageMixin, Page):
     @route('^category/$', name='category_page')
     @route('^category/([\w-]+)/$', name='category_page')
     def category_page(self, request, category=None):
-        print('category>>>>>')
+        context = {}
         try:
             category = BlogCategory.objects.get(name=category)
         except BlogCategory.DoesNotExist:
-            if category:
-                msg = 'There are no blog posts tagged with "{}"'.format(tag)
-                messages.add_message(request, messages.INFO, msg)
-            return redirect(self.url)
-        context = {
-            'blogpages': self.get_posts(categories=category)
-        }
+            context['categories'] = BlogCategory.objects.all()
+            return render(request, 'blog/blog_categories.html', context)
+        context['blogpages'] = self.get_posts(categories=category)
         return render(request, 'blog/blog_index_page.html', context)
 
 
@@ -129,6 +129,31 @@ class BlogPage(Page):
         InlinePanel('gallery_images', label='Gallery images')
     ]
 
+    def main_image(self):
+        gallery_image = self.gallery_images.first()
+        if gallery_image:
+            return gallery_image.image
+        return None
+
+    @property
+    def blog_page(self):
+        return self.get_parent().specific
+   
+    @property
+    def get_tags(self):
+        """
+        Similar to the authors function above we're returning all the tags that
+        are related to the blog post into a list we can access on the template.
+        We're additionally adding a URL to access BlogPage objects with that tag
+        """
+        tags = self.tags.all()
+        for tag in tags:
+            tag.url = '/'+'/'.join(s.strip('/') for s in [
+                self.get_parent().url,
+                'tags',
+                tag.slug
+            ])
+        return tags
 
 class BlogPageGalleryImages(Orderable):
     page = ParentalKey(BlogPage,

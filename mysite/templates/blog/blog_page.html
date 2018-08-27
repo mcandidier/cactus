@@ -1,35 +1,33 @@
 {% extends 'base.html' %}
 
 {% load wagtailcore_tags wagtailimages_tags %}
+{% load wagtailroutablepage_tags %}
 
 
 {% block body_class %}template-blogpage{% endblock %}
 
 {% block content %}
+    {% image page.main_image fill-320x320 %}
+
     <h1>{{ page.title }}</h1>
+
     <div class="">
           categories:
           <ul>
           {% for category in page.categories.all %}
             <li>
-                {{ category.name }}
+                <a href="{% routablepageurl page.blog_page 'category_page' category %}">{{ category.name }}</a>
             </li>
           {% endfor %}
          </ul>
     </div>
     <div>
         tags:
-        {% if page.tags.all.count %}
         <ul>
-            {% for tag in page.tags.all %}
-            <li>
-                <a href="{% slugurl 'tags' %}?tag={{ tag }}">
-                    <button type="button">{{ tag }}</button>
-                </a>
-            </li>
+            {% for tag in page.get_tags %}
+            <a href="{{ tag.url }}">{{tag.name}}</a>
             {% endfor %}
         </ul>
-        {% endif %}
     </div>
 
     <div class="intro">{{ page.intro|richtext }}</div>
@@ -42,7 +40,7 @@
     </div>
     {% endfor %}
 
-    <div>    
+    <div>
         <p><a href="{{ page.get_parent.url }}">Return to blog</a></p>
     </div>
 {% endblock %}
