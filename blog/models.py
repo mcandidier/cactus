@@ -1,15 +1,22 @@
 from django.db import models
+from django.contrib import messages
+from django import forms 
+from django.shortcuts import render, redirect, get_object_or_404
 
 from wagtail.core.models import Page, Orderable
 from wagtail.core.fields import RichTextField
 from wagtail.admin.edit_handlers import FieldPanel, MultiFieldPanel, InlinePanel
+from wagtail.contrib.routable_page.models import RoutablePageMixin, route
+
 from wagtail.search import index
 from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.snippets.models import register_snippet
 
-from modelcluster.fields import ParentalKey
+from modelcluster.fields import ParentalKey, ParentalManyToManyField
 from modelcluster.contrib.taggit import ClusterTaggableManager
-from taggit.models import TaggedItemBase
+
+from taggit.models import TaggedItemBase, Tag
+
 
 @register_snippet
 class BlogCategory(models.Model):
@@ -33,7 +40,7 @@ class BlogCategory(models.Model):
         verbose_name_plural = 'blog categories'
 
 
-class BlogIndexPage(Page):
+class BlogIndexPage(RoutablePageMixin, Page):
     intro = RichTextField(blank=True)
 
     content_panels = Page.content_panels + [
@@ -46,6 +53,53 @@ class BlogIndexPage(Page):
         context['blogpages'] = blogpages
         return context
 
+    # Returns the child BlogPage objects for this BlogPageIndex.
+    # If a tag or category is used then it will filter the posts.
+    def get_posts(self, **kwargs):
+        posts = BlogPage.objects.live().descendant_of(self)
+        tag = kwargs.get('tag', None)
+        category = kwargs.get('category', None)
+
+        if tag:
+            posts = posts.filter(tags=tag)
+        if category: 
+            posts = posts.filter(category=category)
+        return posts
+
+    @route('^tags/$', name='tag_page')
+    @route('^tags/([\w-]+)/$', name='tag_page')
+    def tag_page(self, request, tag=None):
+        try:
+            tag = Tag.objects.get(slug=tag)
+        except Tag.DoesNotExist:
+            if tag:
+                msg = 'There are no blog posts tagged with "{}"'.format(tag)
+                messages.add_message(request, messages.INFO, msg)
+            return redirect(self.url)
+
+        blogpages = self.get_posts(tag=tag)
+        context = {
+            'tag': tag,
+            'blogpages': blogpages
+        }
+        return render(request, 'blog/blog_index_page.html', context)
+
+    @route('^category/$', name='category_page')
+    @route('^category/([\w-]+)/$', name='category_page')
+    def category_page(self, request, category=None):
+        print('category>>>>>')
+        try:
+            category = BlogCategory.objects.get(name=category)
+        except BlogCategory.DoesNotExist:
+            if category:
+                msg = 'There are no blog posts tagged with "{}"'.format(tag)
+                messages.add_message(request, messages.INFO, msg)
+            return redirect(self.url)
+        context = {
+            'blogpages': self.get_posts(categories=category)
+        }
+        return render(request, 'blog/blog_index_page.html', context)
+
 
 class BlogPageTag(TaggedItemBase):
     content_object = ParentalKey('BlogPage', related_name='tagged_items',
@@ -57,6 +111,7 @@ class BlogPage(Page):
     intro = models.CharField(max_length=250)
     body = RichTextField(blank=True)
     tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
+    categories = ParentalManyToManyField('blog.BlogCategory', blank=True)
 
     search_fields = Page.search_fields + [
         index.SearchField('intro'),
@@ -67,11 +122,13 @@ class BlogPage(Page):
         MultiFieldPanel([
             FieldPanel('date'),
             FieldPanel('tags'),
-        ]),
+            FieldPanel('categories', widget=forms.CheckboxSelectMultiple)
+        ], heading="blog information"),
         FieldPanel('intro'),
         FieldPanel('body', classname="full"),
         InlinePanel('gallery_images', label='Gallery images')
     ]
+
 
 class BlogPageGalleryImages(Orderable):
     page = ParentalKey(BlogPage,
