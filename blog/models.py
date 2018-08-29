@@ -64,7 +64,6 @@ class BlogIndexPage(RoutablePageMixin, Page):
         posts = BlogPage.objects.live().descendant_of(self)
         tag = kwargs.get('tag', None)
         category = kwargs.get('category', None)
-
         if tag:
             posts = posts.filter(tags=tag)
         if category: 
