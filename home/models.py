@@ -69,3 +69,29 @@ class HomePage(Page):
             PageChooserPanel('featre_section_2_page')
         ], heading='Featured Section 2')
     ]
+
+
+
+class StandardPage(Page):
+    """ Standard page models.
+    """
+    hero_title = models.CharField(max_length=1024)
+    hero_image = models.ForeignKey(
+        'wagtailimages.Image',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Hero image"
+    ) 
+    hero_text = models.CharField(max_length=1024)
+    body = RichTextField(blank=True)
+
+    content_panels = Page.content_panels + [
+        ImageChooserPanel('hero_image'),
+        MultiFieldPanel([
+            FieldPanel('hero_title'),
+            FieldPanel('hero_text')
+        ]),
+        FieldPanel('body', classname="full")
+    ]
