@@ -1,0 +1,15 @@
+{% load nav_tags wagtailcore_tags %}
+{% get_site_root as site_root %}
+
+<ul class="navbar-nav ml-auto">
+    {% for menuitem in menuitems %}
+    <li class="nav-item {{ menuitem.title|lower|cut:" " }}{% if menuitem.active %} active{% endif %}{% if menuitem.show_dropdown %} has-submenu{% endif %}">
+        {% if menuitem.show_dropdown %}
+            <a href="{% pageurl menuitem %}" class="nav-link">{{ menuitem.title }}</a>
+                {# Used to display child menu items #}
+        {% else %}
+            <a href="{% pageurl menuitem %}" role="menuitem" class="nav-item">{{ menuitem.title }}</a>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>

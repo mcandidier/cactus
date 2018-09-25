@@ -47,8 +47,22 @@ class BlogCategory(models.Model):
 
 class BlogIndexPage(RoutablePageMixin, Page):
     intro = RichTextField(blank=True)
-
+    hero_title = models.CharField(max_length=1024)
+    hero_body = RichTextField(blank=True)
+    hero_image = models.ForeignKey(
+        'wagtailimages.Image',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Hero image"
+    )
     content_panels = Page.content_panels + [
+        MultiFieldPanel([
+            ImageChooserPanel('hero_image', heading='hero main image'),
+            FieldPanel('hero_title'),
+            FieldPanel('hero_body', classname='full')
+        ]),
         FieldPanel('intro', classname="full")
     ]
 
@@ -128,6 +142,7 @@ class BlogPage(Page):
         InlinePanel('gallery_images', label='Gallery images')
     ]
 
+    @property
     def main_image(self):
         gallery_image = self.gallery_images.first()
         if gallery_image:

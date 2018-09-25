@@ -3,44 +3,41 @@
 {% load wagtailcore_tags wagtailimages_tags %}
 {% load wagtailroutablepage_tags %}
 
-
 {% block body_class %}template-blogpage{% endblock %}
 
-{% block content %}
-    {% image page.main_image fill-320x320 %}
+{% block heading %}
+    <!-- Page Header -->
+    {% image page.main_image fill-850x450-c50 as image %}
+    <header class="masthead" style="background-image: url('{{ image.url }}')">
+        <div class="overlay"></div>
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-8 col-md-10 mx-auto">
+              <div class="post-heading">
+                <h1>{{ page.intro }}</h1>
+                <h2 class="subheading">Problems look mighty small from 150 miles up</h2>
+                <span class="meta">Posted by
+                  <a href="#">{{ page.owner }}</a>
+                  on {{ page.date }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+    </header>
 
-    <h1>{{ page.title }}</h1>
-
-    <div class="">
-          categories:
-          <ul>
-          {% for category in page.categories.all %}
-            <li>
-                <a href="{% routablepageurl page.blog_page 'category_page' category %}">{{ category.name }}</a>
-            </li>
-          {% endfor %}
-         </ul>
-    </div>
-    <div>
-        tags:
-        <ul>
-            {% for tag in page.get_tags %}
-            <a href="{{ tag.url }}">{{tag.name}}</a>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <div class="intro">{{ page.intro|richtext }}</div>
-    <div class="body">{{ page.body|richtext }}</div>
-
-    {% for item in page.gallery_images.all %}
-    <div>
-        {% image item.image fill-320x240 %}
-        <p>{{ item.caption }}</p>
-    </div>
-    {% endfor %}
-
-    <div>
-        <p><a href="{{ page.get_parent.url }}">Return to blog</a></p>
-    </div>
 {% endblock %}
+
+{% block content %}
+    <!-- Post Content -->
+    <article>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            {{ page.body | richtext }}
+          </div>
+        </div>
+      </div>
+    </article>
+    <hr>
+{% endblock %}
+
