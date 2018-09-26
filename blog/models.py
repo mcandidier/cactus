@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib import messages
 from django import forms 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.paginator import Paginator
+from django.conf import settings
 
 from wagtail.core.models import Page, Orderable
 from wagtail.core.fields import RichTextField
@@ -69,13 +71,16 @@ class BlogIndexPage(RoutablePageMixin, Page):
     def get_context(self, request):
         context = super().get_context(request)
         blogpages = self.get_children().live().order_by('-first_published_at')
-        context['blogpages'] = blogpages
+        paginator = Paginator(blogpages, settings.PAGINATE_NUMBER)
+        page = request.GET.get('page')
+        blogs =  paginator.get_page(page)
+        context['blogpages'] = blogs
         return context
 
     # Returns the child BlogPage objects for this BlogPageIndex.
     # If a tag or category is used then it will filter the posts.
     def get_posts(self, **kwargs):
-        posts = BlogPage.objects.live().descendant_of(self)
+        posts = BlogPage.objects.live().descendant_of(self).order_by('-first_published_at')
         tag = kwargs.get('tag', None)
         category = kwargs.get('category', None)
         if tag:

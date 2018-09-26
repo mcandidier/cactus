@@ -39,12 +39,17 @@
             <a href="#">{{ post.owner }}</a>
             on {{ post.last_published_at }}</p>
         </div>
+        {% if not forloop.last %}
         <hr>
+        {% endif %}
         {% endwith %}
     {% endfor %}
     <!-- Pager -->
+
+    {% if blogpages.has_next %}
     <div class="clearfix">
-        <a class="btn btn-primary float-right" href="#">Older Posts &rarr;</a>
+        <a class="btn btn-primary float-right" href="?page={{ blogpages.next_page_number }}">Older Posts &rarr;</a>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
