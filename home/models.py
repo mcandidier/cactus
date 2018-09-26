@@ -4,6 +4,7 @@ from wagtail.core.models import Page
 from wagtail.core.fields import RichTextField
 from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.admin.edit_handlers import FieldPanel, MultiFieldPanel, PageChooserPanel
+from wagtail.snippets.models import register_snippet
 
 
 class HomePage(Page):
@@ -95,3 +96,26 @@ class StandardPage(Page):
         ]),
         FieldPanel('body', classname="full")
     ]
+
+
+@register_snippet
+class SocialItems(models.Model):
+    """Social pages
+    """
+    name = models.CharField(max_length=128)
+    link = models.URLField(blank=True, null=True, help_text='your social page url')
+    icon = models.ForeignKey(
+        'wagtailimages.Image',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+"
+    )
+
+    panels = [
+        FieldPanel('name'),
+        FieldPanel('link'),
+        ImageChooserPanel('icon')
+    ]
+
+    def __str__(self):
+        return self.name

@@ -1,0 +1,12 @@
+<ul class="list-inline text-center">
+    {% for item in items %}
+    <li class="list-inline-item">
+        <a href="{{ item.link }}"" target="blank">
+        <span class="fa-stack fa-lg">
+            <i class="fa fa-circle fa-stack-2x"></i>
+            <i class="fa fa-{{item.name}} fa-stack-1x fa-inverse"></i>
+        </span>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
